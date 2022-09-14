@@ -4,11 +4,17 @@
 package main
 
 import (
+	"github.com/gorilla/handlers"
 	"log"
 	"net/http"
 )
 
 func main() {
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(":80", router))
+
+	headersOK := handlers.AllowedHeaders([]string{"X-Amzn-Trace-Id"})
+	originsOK := handlers.AllowedOrigins([]string{webRootURL})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "PUT"})
+
+	log.Fatal(http.ListenAndServe(":80", handlers.CORS(originsOK, headersOK, methodsOK)(router)))
 }
