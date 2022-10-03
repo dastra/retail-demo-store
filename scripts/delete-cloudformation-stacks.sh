@@ -4,7 +4,7 @@
 #
 #
 # Example usage
-# ./scripts/delete-cloudformation-stacks.sh REGION S3_BUCKET
+# ./scripts/delete-cloudformation-stacks.sh REGION STACK_NAME
 #
 
 set -e

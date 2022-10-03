@@ -38,7 +38,7 @@ do
         elif [ "$bool" == "pre-index-elasticsearch" ]
         then
             pre_index_elasticsearch=true
-            echo Received a \"--pre-create-personalize\" flag. Will index ElasticSearch after deployment
+            echo Received a \"--pre-index-elasticsearch\" flag. Will index ElasticSearch after deployment
         else
             echo Received an unknown flag \"$bool\"
             exit 1
