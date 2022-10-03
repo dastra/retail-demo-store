@@ -597,6 +597,8 @@ Resources:
         OffersServiceExternalUrl: !GetAtt Services.Outputs.OffersServiceUrl
         PinpointAppId: !GetAtt Base.Outputs.PinpointAppId
         ParameterPersonalizeEventTrackerId: !GetAtt Base.Outputs.ParameterPersonalizeEventTrackerId
+        CloudwatchRumAppMonitorId: !GetAtt Base.Outputs.CloudwatchRumAppMonitorId
+        CloudwatchRumGuestRoleArn: !GetAtt Base.Outputs.CloudwatchRumGuestRoleArn
         FenixZipDetectUrl: !Ref FenixZipDetectUrl
         FenixTenantId: !Ref FenixTenantId
         FenixEddEndpoint: !Ref FenixEddEndpoint

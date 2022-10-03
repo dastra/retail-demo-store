@@ -146,6 +146,14 @@ Parameters:
     Type: String
     Description: URL of WebSocket API for Geofence notifications
 
+  CloudwatchRumAppMonitorId:
+    Type: String
+    Description: The ID of the Cloudwatch Rum App Monitor
+
+  CloudwatchRumGuestRoleArn:
+    Type: String
+    Description: The ARN of the guest Cognito role used by Cloudwatch RUM
+
   FenixZipDetectUrl:
     Type: String
     Description: Fenix Commerce Zipcode Detect URL
@@ -453,6 +461,10 @@ Resources:
             Value: !Ref WebRootUrl
           - Name: IMAGE_ROOT_URL
             Value: !Ref ImageRootUrl
+          - Name: CLOUDWATCH_RUM_APP_MONITOR_ID
+            Value: !Ref CloudwatchRumAppMonitorId
+          - Name: CLOUDWATCH_RUM_GUEST_ROLE_ARN
+            Value: !Ref CloudwatchRumGuestRoleArn
           - Name: FENIX_ZIP_DETECT_URL
             Value: !Ref FenixZipDetectUrl
           - Name: FENIX_TENANT_ID

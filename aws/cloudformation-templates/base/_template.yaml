@@ -303,6 +303,16 @@ Resources:
       Parameters:
         CleanupBucketLambdaArn: !Ref CleanupBucketLambdaArn
 
+  # Cloudwatch
+  Cloudwatch:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://s3.amazonaws.com/${ResourceBucket}/${ResourceBucketRelativePath}cloudformation-templates/base/cloudwatch.yaml
+      Parameters:
+        CognitoIdentityPoolId: !GetAtt Authentication.Outputs.IdentityPoolId
+        WebUICDNDomainName: !GetAtt CloudFront.Outputs.WebUICDNDomainName
+        ParentStackName: !Ref ParentStackName
+
   # Personalize Resources
   Personalize:
     Type: AWS::CloudFormation::Stack
@@ -455,6 +465,14 @@ Outputs:
   SwaggerUICDNURL:
     Description: The URL for the web application
     Value: !GetAtt CloudFront.Outputs.SwaggerUICDNURL
+
+  CloudwatchRumAppMonitorId:
+    Description: The ID for the Cloudwatch RUM App Monitor
+    Value: !GetAtt Cloudwatch.Outputs.RumAppMonitorId
+
+  CloudwatchRumGuestRoleArn:
+    Description: The ARN of the guest Cognito role used by Cloudwatch RUM
+    Value: !GetAtt Cloudwatch.Outputs.CognitoGuestRoleArn
 
   EvidentlyProjectName:
     Description: Evidently project name

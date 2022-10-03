@@ -152,6 +152,10 @@ Outputs:
       - 'http://${Domain}'
       - Domain: !GetAtt WebUICDN.DomainName    
 
+  WebUICDNDomainName:
+    Description: The domain name for the web application
+    Value: !GetAtt WebUICDN.DomainName
+
   # Swagger UI outputs
   SwaggerUIBucketName:
     Description: Swagger UI S3 bucket for CloudFront distribution.

@@ -11,6 +11,7 @@ import { Analytics as AmplifyAnalytics } from '@aws-amplify/analytics';
 import Amplitude from 'amplitude-js'
 import { RepositoryFactory } from '@/repositories/RepositoryFactory'
 import optimizelySDK from '@optimizely/optimizely-sdk';
+import {AwsRum} from "aws-rum-web";
 
 const RecommendationsRepository = RepositoryFactory.get('recommendations')
 const ProductsRepository = RepositoryFactory.get('products')
@@ -24,13 +25,13 @@ export const AnalyticsHandler = {
         }
         if (this.mParticleEnabled()) {
             var identityCallback = function() {
-             window.mParticle.logEvent(
-                        'Logout',
-                        window.mParticle.EventType.Transaction, {}
-                    );
+                window.mParticle.logEvent(
+                    'Logout',
+                    window.mParticle.EventType.Transaction, {}
+                );
             };
             window.mParticle.Identity.logout({}, identityCallback);
-           }
+       }
     },
 
     async identify(user) {
@@ -213,7 +214,9 @@ export const AnalyticsHandler = {
 
             if (this.mParticleEnabled()) {
                 window.mParticle.logEvent('UserSignedUp', window.mParticle.EventType.Transaction, { "method": "Web" });
-               }
+            }
+
+            AnalyticsHandler.recordCloudwatchRumPageView('/signed-up');
         }
     },
 
@@ -235,7 +238,9 @@ export const AnalyticsHandler = {
 
             if (this.mParticleEnabled()) {
                 window.mParticle.logEvent('UserSignedIn', window.mParticle.EventType.Transaction, { "method": "Web" });
-               }
+            }
+
+            AnalyticsHandler.recordCloudwatchRumPageView('/logged-up');
         }
     },
 
@@ -268,6 +273,11 @@ export const AnalyticsHandler = {
     },
 
     productAddedToCart(user, cart, product, quantity, feature, experimentCorrelationId) {
+        this.cloudwatchRumInstance().recordPageView({
+            pageId: '/cart-addition/' + product.name + '/' + product.id,
+            pageTags: ['cart-addition']
+        })
+
         if (user) {
             AmplifyAnalytics.record({
                 name: 'AddToCart',
@@ -388,7 +398,8 @@ export const AnalyticsHandler = {
             });
         }
     },
-   async recordShoppingCart (user, cart) {
+
+    async recordShoppingCart (user, cart) {
         if (user && cart) {
             const hasItem = cart.items.length > 0
             var productImages, productTitles, productURLs
@@ -420,6 +431,7 @@ export const AnalyticsHandler = {
             return false;
         }
     },
+
     async recordAbanonedCartEvent(user, cart) {
         const hasItem = await this.recordShoppingCart(user, cart)
         var productImages, productTitles, productURLs
@@ -453,6 +465,11 @@ export const AnalyticsHandler = {
     },
 
     productRemovedFromCart(user, cart, cartItem, origQuantity) {
+        this.cloudwatchRumInstance().recordPageView({
+            pageId: '/cart-removal/' + cartItem.product_name + '/' + cartItem.product_id,
+            pageTags: ['cart-removal']
+        })
+
         if (user && user.id) {
             AmplifyAnalytics.record({
                 name: 'RemoveFromCart',
@@ -504,7 +521,6 @@ export const AnalyticsHandler = {
             Amplitude.getInstance().logEvent('RemoveFromCart', eventProperties);
         }
 
-
         if (this.googleAnalyticsEnabled()) {
             Vue.prototype.$gtag.event('remove_from_cart', {
                 "currency": "USD",
@@ -523,6 +539,11 @@ export const AnalyticsHandler = {
     },
 
     productQuantityUpdatedInCart(user, cart, cartItem, change) {
+        this.cloudwatchRumInstance().recordPageView({
+            pageId: '/cart-quantity-update/' + cartItem.product_name + '/' + cartItem.product_id + '/' + change,
+            pageTags: ['cart-quantity-update']
+        })
+
         if (user && user.id) {
             AmplifyAnalytics.record({
                 name: 'UpdateQuantity',
@@ -578,6 +599,7 @@ export const AnalyticsHandler = {
             Amplitude.getInstance().logEvent('UpdateQuantity', eventProperties);
         }
     },
+
     productViewed(user, product, feature, experimentCorrelationId, discount) {
         if (user) {
             AmplifyAnalytics.record({
@@ -1032,6 +1054,8 @@ export const AnalyticsHandler = {
                 "search_term": query
             });
         }
+
+        AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: "/search/" + query, pageTags: ['search']});
     },
 
     personalizeEventTrackerEnabled() {
@@ -1062,6 +1086,69 @@ export const AnalyticsHandler = {
         return optimizelyClientInstance.configObj.revision !== expectedRevisionNumber;
     },
 
+    cloudwatchRumInstance() {
+        if (!this._cloudwatchRumInstance) {
+            try {
+                const pinpointUrl = "https://pinpoint." + process.env.VUE_APP_PINPOINT_REGION + ".amazonaws.com/"
+                const cloudwatchRumRegion = process.env.VUE_APP_CLOUDWATCH_RUM_REGION
+
+                const config = {
+                    allowCookies: true,
+                    disableAutoPageView: true,
+                    enableXRay: true,
+                    endpoint: "https://dataplane.rum." + cloudwatchRumRegion + ".amazonaws.com",
+                    guestRoleArn: process.env.VUE_APP_CLOUDWATCH_RUM_GUEST_ROLE_ARN,
+                    identityPoolId: process.env.VUE_APP_AWS_IDENTITY_POOL_ID,
+                    pageIdFormat: 'PATH_AND_HASH',
+                    sessionSampleRate: 1,
+                    telemetries: [
+                        'errors',
+                        [ 'http', {
+                            addXRayTraceIdHeader: true,
+                            urlsToExclude: [new RegExp(pinpointUrl)]  // excluding pinpoint to avoid CORS errors
+                        } ],
+                        [ 'interaction', { enableMutationObserver: true } ],
+                        'performance'
+                    ]
+                };
+
+                let applicationId = process.env.VUE_APP_CLOUDWATCH_RUM_APP_MONITOR_ID;
+                let applicationVersion = '1.0.0';
+
+                this._cloudwatchRumInstance =  new AwsRum(
+                    applicationId,
+                    applicationVersion,
+                    cloudwatchRumRegion,
+                    config
+                );
+            } catch (error) {
+                console.log('Error initialising Cloudwatch RUM - ' + JSON.stringify(error))
+            }
+        }
+        return this._cloudwatchRumInstance;
+    },
+
+    destroyCloudwatchRumUserSession(){
+        this.cloudwatchRumInstance().dispatch();
+
+        // There are two cloudwatch RUM cookies - a session cookie named cwr_s and a user cookie named cwr_u.
+        // Delete them to generate a new session.
+        document.cookie = 'cwr_s=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'cwr_u=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+
+        this.cloudwatchRumInstance().recordPageView('/switch-user')
+    },
+
+    recordCloudwatchRumPageView(path) {
+        if (path.substring(0, 9).toString() === '/product/') {
+            AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: path, pageTags: ['product-detail']});
+        } else if (path.substring(0, 10).toString() === '/category/') {
+            AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: path, pageTags: ['category-detail']});
+        } else  {
+            AnalyticsHandler.cloudwatchRumInstance().recordPageView(path);
+        }
+    },
+
     optimizelyClientInstance() {
         if (!this._optimizelyClientInstance && this.optimizelyEnabled()) {
             this._optimizelyClientInstance = optimizelySDK.createInstance({ sdkKey: process.env.VUE_APP_OPTIMIZELY_SDK_KEY });
@@ -1071,5 +1158,5 @@ export const AnalyticsHandler = {
 
     googleAnalyticsEnabled() {
         return process.env.VUE_APP_GOOGLE_ANALYTICS_ID && process.env.VUE_APP_GOOGLE_ANALYTICS_ID != 'NONE';
-    },
+    }
 }

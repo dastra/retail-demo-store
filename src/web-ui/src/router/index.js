@@ -76,7 +76,7 @@ AmplifyEventBus.$on('authState', async (state) => {
       storeUser = data
     }
     else {
-            // Perhaps our auth user is one without an associated "profile" - so there may be no profile_user_id on the
+      // Perhaps our auth user is one without an associated "profile" - so there may be no profile_user_id on the
       // cognito record - so we see if we've created a user in the user service (see below) for this non-profile user
       const { data } = await UsersRepository.getUserByUsername(cognitoUser.username)
       storeUser = data
@@ -86,7 +86,7 @@ AmplifyEventBus.$on('authState', async (state) => {
 
     if (!storeUser.id) {
       // Store user does not exist. Create one on the fly.
-      // This takes the personalize User ID which was a UUID4 for the current session and turns it into a user user ID.
+      // This takes the Personalize User ID which was a UUID4 for the current session and turns it into a user ID.
       console.log('store user does not exist for cognito user... creating on the fly')
       let identityId = credentials ? credentials.identityId : null;
       let provisionalUserId = AmplifyStore.getters.personalizeUserID;
@@ -173,6 +173,9 @@ AmplifyEventBus.$on('authState', async (state) => {
       storeUser.identity_id = credentials.identityId
       UsersRepository.updateUser(storeUser)
     }
+
+    // Destroying the current user's session cookies so that it appears as a new session
+    AnalyticsHandler.destroyCloudwatchRumUserSession();
   }
 });
 
@@ -286,6 +289,8 @@ const router = new Router({
 // Check if we need to redirect to welcome page - if redirection has never taken place and user is not authenticated
 // Check For Authentication
 router.beforeResolve(async (to, from, next) => {
+  AnalyticsHandler.recordCloudwatchRumPageView(to.path);
+
   AmplifyStore.dispatch('pageVisited', from.fullPath);
 
   if (!AmplifyStore.state.welcomePageVisited.visited) {
