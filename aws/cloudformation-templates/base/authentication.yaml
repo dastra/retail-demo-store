@@ -16,6 +16,10 @@ Parameters:
     Type: String
     Description: Prefix of Location Services resources to use
 
+  ParentStackName:
+    Type: String
+    Description: The name of the parent stack - for instance retaildemostore
+
 Resources:
   # Creates a role that allows Cognito to send SNS messages
   SNSRole:
@@ -168,7 +172,7 @@ Resources:
                 Action:
                   - "rum:PutRumEvents"
                 Resource:
-                  - !Sub "arn:aws:rum:${AWS::Region}:${AWS::AccountId}:appmonitor/RetailDemoStore"
+                  - !Sub "arn:aws:rum:${AWS::Region}:${AWS::AccountId}:appmonitor/${ParentStackName}"
 
   # Create a role for authorized acces to AWS resources. Control what your user can access. This example only allows Lambda invokation
   # Only allows users in the previously created Identity Pool
@@ -252,7 +256,7 @@ Resources:
                 Action:
                   - "rum:PutRumEvents"
                 Resource:
-                  - !Sub "arn:aws:rum:${AWS::Region}:${AWS::AccountId}:appmonitor/RetailDemoStore"
+                  - !Sub "arn:aws:rum:${AWS::Region}:${AWS::AccountId}:appmonitor/${ParentStackName}"
 
   # Assigns the roles to the Identity Pool
   IdentityPoolRoleMapping:
