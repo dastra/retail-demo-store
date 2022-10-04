@@ -274,8 +274,8 @@ export const AnalyticsHandler = {
 
     productAddedToCart(user, cart, product, quantity, feature, experimentCorrelationId) {
         this.cloudwatchRumInstance().recordPageView({
-            pageId: '/cart-addition/' + product.name + '/' + product.id,
-            pageTags: ['cart-addition']
+            pageId: '/cart-addition/',
+            pageTags: ['product:' + product.id]
         })
 
         if (user) {
@@ -466,8 +466,8 @@ export const AnalyticsHandler = {
 
     productRemovedFromCart(user, cart, cartItem, origQuantity) {
         this.cloudwatchRumInstance().recordPageView({
-            pageId: '/cart-removal/' + cartItem.product_name + '/' + cartItem.product_id,
-            pageTags: ['cart-removal']
+            pageId: '/cart-removal/',
+            pageTags: ['product:' + cartItem.product_id]
         })
 
         if (user && user.id) {
@@ -540,8 +540,8 @@ export const AnalyticsHandler = {
 
     productQuantityUpdatedInCart(user, cart, cartItem, change) {
         this.cloudwatchRumInstance().recordPageView({
-            pageId: '/cart-quantity-update/' + cartItem.product_name + '/' + cartItem.product_id + '/' + change,
-            pageTags: ['cart-quantity-update']
+            pageId: '/cart-quantity-update/',
+            pageTags: ['product:' + cartItem.product_id]
         })
 
         if (user && user.id) {
@@ -1055,7 +1055,7 @@ export const AnalyticsHandler = {
             });
         }
 
-        AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: "/search/" + query, pageTags: ['search']});
+        AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: "/search/", pageTags: ['search:' + query]});
     },
 
     personalizeEventTrackerEnabled() {
@@ -1131,19 +1131,23 @@ export const AnalyticsHandler = {
     destroyCloudwatchRumUserSession(){
         this.cloudwatchRumInstance().dispatch();
 
+        console.log("... deleting cookies")
+
         // There are two cloudwatch RUM cookies - a session cookie named cwr_s and a user cookie named cwr_u.
         // Delete them to generate a new session.
         document.cookie = 'cwr_s=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         document.cookie = 'cwr_u=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 
-        this.cloudwatchRumInstance().recordPageView('/switch-user')
+        console.log("... Done")
+
+        this.cloudwatchRumInstance().recordPageView('/switch-user/')
     },
 
     recordCloudwatchRumPageView(path) {
         if (path.substring(0, 9).toString() === '/product/') {
-            AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: path, pageTags: ['product-detail']});
+            AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: '/product/', pageTags: ['product:' + path.substring(9)]});
         } else if (path.substring(0, 10).toString() === '/category/') {
-            AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: path, pageTags: ['category-detail']});
+            AnalyticsHandler.cloudwatchRumInstance().recordPageView({ pageId: '/category/', pageTags: ['category:' + path.substring(10)]});
         } else  {
             AnalyticsHandler.cloudwatchRumInstance().recordPageView(path);
         }
