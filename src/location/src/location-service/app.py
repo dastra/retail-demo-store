@@ -10,8 +10,14 @@ import json
 import os
 import pprint
 
-RESOURCE_BUCKET = os.environ.get('RESOURCE_BUCKET')
+# AWS X-ray support
+from aws_xray_sdk.core import xray_recorder
+from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
+from aws_xray_sdk.core import patch_all
 
+patch_all()
+
+RESOURCE_BUCKET = os.environ.get('RESOURCE_BUCKET')
 s3 = boto3.resource('s3')
 
 store_location = {}
@@ -22,6 +28,9 @@ cstore_route = {}
 
 
 def load_s3_data():
+    xray_recorder.begin_segment('Location Service')
+    xray_recorder.begin_subsegment('Load S3 Data')
+
     global customer_route
     route_file_obj = s3.Object(RESOURCE_BUCKET, 'location_services/customer_route.json')
     customer_route = json.loads(route_file_obj.get()['Body'].read().decode('utf-8'))
@@ -37,6 +46,8 @@ def load_s3_data():
     global cstore_location
     route_file_obj = s3.Object(RESOURCE_BUCKET, 'location_services/cstore_location.json')
     cstore_location = json.loads(route_file_obj.get()['Body'].read().decode('utf-8'))
+
+    xray_recorder.end_subsegment()
 
 
 # -- Logging
@@ -58,8 +69,10 @@ class LoggingMiddleware(object):
 
 # -- Handlers
 app = Flask(__name__)
-corps = CORS(app)
+corps = CORS(app, expose_headers=['X-Amzn-Trace-Id'])
 
+xray_recorder.configure(service='Location Service', plugins=('ECSPlugin',))
+XRayMiddleware(app, xray_recorder)
 
 @app.route('/')
 def index():

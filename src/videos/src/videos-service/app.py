@@ -305,8 +305,7 @@ class BadRequest(Exception):
 app = Flask(__name__,
             static_folder=STATIC_FOLDER,
             static_url_path=STATIC_URL_PATH)
-corps = CORS(app)
-
+corps = CORS(app, expose_headers=['X-Amzn-Trace-Id'])
 
 xray_recorder.configure(service='Videos Service')
 XRayMiddleware(app, xray_recorder)

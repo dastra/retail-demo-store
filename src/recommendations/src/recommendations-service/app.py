@@ -316,7 +316,8 @@ class BadRequest(Exception):
 
 app = Flask(__name__)
 logger = app.logger
-corps = CORS(app, expose_headers=['X-Experiment-Name', 'X-Experiment-Type', 'X-Experiment-Id', 'X-Personalize-Recipe'])
+corps = CORS(app, expose_headers=['X-Experiment-Name', 'X-Experiment-Type', 'X-Experiment-Id', 'X-Personalize-Recipe',
+                                  'X-Amzn-Trace-Id'])
 
 xray_recorder.configure(service='Recommendations Service')
 XRayMiddleware(app, xray_recorder)

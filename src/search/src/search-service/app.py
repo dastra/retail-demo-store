@@ -47,7 +47,7 @@ class LoggingMiddleware(object):
 # -- End Logging
 
 app = Flask(__name__)
-corps = CORS(app)
+corps = CORS(app, expose_headers=['X-Amzn-Trace-Id'])
 
 xray_recorder.configure(service='Search Service')
 XRayMiddleware(app, xray_recorder)

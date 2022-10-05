@@ -61,6 +61,7 @@ services:
     container_name: recommendations
     depends_on:
       - products
+      - xray
     environment:
       - AWS_PROFILE
       - AWS_DEFAULT_REGION
@@ -107,8 +108,10 @@ services:
     container_name: search
     depends_on:
       - opensearch
+      - xray
     environment:
       - AWS_PROFILE
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
       - OPENSEARCH_DOMAIN_SCHEME
       - OPENSEARCH_DOMAIN_HOST
       - OPENSEARCH_DOMAIN_PORT
@@ -137,15 +140,21 @@ services:
 
   offers:
     container_name: offers
+    depends_on:
+      - xray
     build:
       context: offers
     networks:
       - dev-net
+    environment:
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
     ports:
       - "8008:80"
 
   location:
     container_name: location
+    depends_on:
+      - xray
     build:
       context: location
     networks:
@@ -154,6 +163,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
       - RESOURCE_BUCKET
       - AWS_PROFILE
       - AWS_DEFAULT_REGION
@@ -177,6 +187,8 @@ services:
 
   videos:
     container_name: videos
+    depends_on:
+      - xray
     build:
       context: ./videos
     networks:
