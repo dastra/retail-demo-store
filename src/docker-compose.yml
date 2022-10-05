@@ -15,6 +15,8 @@ services:
       - AWS_SESSION_TOKEN
     ports:
       - "8003:80"
+    volumes:
+      - go-modules:/go/pkg/mod  # Go module cache on a common volume
 
   ddb:
     image: amazon/dynamodb-local
@@ -33,6 +35,8 @@ services:
       - dev-net
     ports:
       - "8004:80"
+    volumes:
+      - go-modules:/go/pkg/mod  # Go module cache on a common volume
 
   products:
     container_name: products
@@ -56,6 +60,8 @@ services:
       - dev-net
     ports:
       - "8001:80"
+    volumes:
+      - go-modules:/go/pkg/mod  # Go module cache on a common volume
 
   recommendations:
     container_name: recommendations
@@ -137,6 +143,8 @@ services:
       - dev-net
     ports:
       - "8002:80"
+    volumes:
+      - go-modules:/go/pkg/mod  # Go module cache on a common volume
 
   offers:
     container_name: offers
@@ -211,7 +219,7 @@ services:
   xray:
     image: amazon/aws-xray-daemon
     ports:
-    - 2000:2000/udp
+      - 2000:2000/udp
     environment:
       - AWS_PROFILE
       - AWS_DEFAULT_REGION
@@ -243,3 +251,6 @@ services:
 networks:
   dev-net:
     driver: bridge
+
+volumes:
+  go-modules: # To allow for common cache of go modules
