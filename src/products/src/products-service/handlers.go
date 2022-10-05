@@ -24,8 +24,10 @@ var missingImageFile = "product_image_coming_soon.png"
 
 // initResponse
 func initResponse(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Content-Type", "application/json; charset=UTF-8")
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, DELETE, OPTIONS")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
 }
 
 func fullyQualifyImageURLs(r *http.Request) bool {

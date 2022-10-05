@@ -5,6 +5,8 @@ version: "3.7"
 services:
   carts:
     container_name: carts
+    depends_on:
+      - xray
     build:
       context: ./carts
     networks:
@@ -13,6 +15,7 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
     ports:
       - "8003:80"
     volumes:
@@ -29,6 +32,10 @@ services:
 
   orders:
     container_name: orders
+    depends_on:
+      - xray
+    environment:
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
     build:
       context: ./orders
     networks:
@@ -42,11 +49,13 @@ services:
     container_name: products
     depends_on:
       - ddb
+      - xray
     environment:
       - AWS_REGION
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
       - DDB_TABLE_PRODUCTS
       - DDB_TABLE_CATEGORIES
       - DDB_ENDPOINT_OVERRIDE
@@ -132,11 +141,14 @@ services:
 
   users:
     container_name: users
+    depends_on:
+      - xray
     environment:
       - AWS_REGION
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
+      - AWS_XRAY_DAEMON_ADDRESS=xray:2000
     build:
       context: ./users
     networks:

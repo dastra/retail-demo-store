@@ -6,13 +6,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/lambda"
 )
 
 // Index Handler
@@ -49,7 +49,7 @@ func CartShowByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//CartUpdate Func
+// CartUpdate Func
 func CartUpdate(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -85,7 +85,7 @@ func CartUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//CartCreate Func
+// CartCreate Func
 func CartCreate(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -118,7 +118,7 @@ func CartCreate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Sign a payload for Amazon Pay - delegates to a Lambda function for doing this.
+// Sign a payload for Amazon Pay - delegates to a Lambda function for doing this.
 func SignAmazonPayPayload(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -162,5 +162,5 @@ func SignAmazonPayPayload(w http.ResponseWriter, r *http.Request) {
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
 }

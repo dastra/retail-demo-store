@@ -57,7 +57,7 @@ func OrderShowByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//OrderUpdate Func
+// OrderUpdate Func
 func OrderUpdate(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -89,7 +89,7 @@ func OrderUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//OrderCreate Func
+// OrderCreate Func
 func OrderCreate(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -125,5 +125,5 @@ func OrderCreate(w http.ResponseWriter, r *http.Request) {
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
 }

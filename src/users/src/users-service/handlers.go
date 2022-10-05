@@ -11,10 +11,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/gorilla/mux"
 )
 
 var MAX_RANDOM_USER_COUNT_PER_REQEUST int = 20
@@ -130,7 +130,7 @@ func UserShowByIdentityId(w http.ResponseWriter, r *http.Request) {
 
 // ClaimUser handler
 func ClaimUser(w http.ResponseWriter, r *http.Request) {
-	
+
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
@@ -146,7 +146,7 @@ func ClaimUser(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(RepoClaimUser(userId)); err != nil {
 		panic(err)
 	}
-} 
+}
 
 // GetRandomUser handler
 func GetRandomUser(w http.ResponseWriter, r *http.Request) {
@@ -160,8 +160,8 @@ func GetRandomUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		if i <= 0 || i > MAX_RANDOM_USER_COUNT_PER_REQEUST { 
-			http.Error(w, fmt.Sprintf("Count must be grater than 0 and less than %d", MAX_RANDOM_USER_COUNT_PER_REQEUST) , http.StatusUnprocessableEntity)
+		if i <= 0 || i > MAX_RANDOM_USER_COUNT_PER_REQEUST {
+			http.Error(w, fmt.Sprintf("Count must be grater than 0 and less than %d", MAX_RANDOM_USER_COUNT_PER_REQEUST), http.StatusUnprocessableEntity)
 			return
 		}
 		count = i
@@ -177,7 +177,7 @@ func GetUnclaimedUsers(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 
 	var keys = r.URL.Query()
-	
+
 	primaryPersona := keys.Get("primaryPersona")
 	ageRange := keys.Get("ageRange")
 	var count = 1
@@ -187,18 +187,19 @@ func GetUnclaimedUsers(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		if i <= 0 || i > MAX_RANDOM_USER_COUNT_PER_REQEUST { 
-			http.Error(w, fmt.Sprintf("Count must be greater than 0 and less than %d", MAX_RANDOM_USER_COUNT_PER_REQEUST) , http.StatusUnprocessableEntity)
+		if i <= 0 || i > MAX_RANDOM_USER_COUNT_PER_REQEUST {
+			http.Error(w, fmt.Sprintf("Count must be greater than 0 and less than %d", MAX_RANDOM_USER_COUNT_PER_REQEUST), http.StatusUnprocessableEntity)
 			return
 		}
 		count = i
 	}
-	
-	if err := json.NewEncoder(w).Encode(RepoFindRandomUsersByPrimaryPersonaAndAgeRange(primaryPersona,ageRange,count)); err != nil {
+
+	if err := json.NewEncoder(w).Encode(RepoFindRandomUsersByPrimaryPersonaAndAgeRange(primaryPersona, ageRange, count)); err != nil {
 		panic(err)
 	}
 }
-//UserUpdate Func
+
+// UserUpdate Func
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -230,7 +231,7 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//UserCreate Func
+// UserCreate Func
 func UserCreate(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
@@ -266,11 +267,11 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//CreateEndpoint for the user and send confirmation message to opt in for text alerts
+// CreateEndpoint for the user and send confirmation message to opt in for text alerts
 func CreateEndpointAndSendConfirmation(w http.ResponseWriter, r *http.Request, updateEndpointInput *pinpoint.UpdateEndpointInput, phonenumber string) {
 	enableCors(&w)
 	updateEndpointOutput, err := pinpoint_client.UpdateEndpoint(updateEndpointInput)
-	if err!= nil{
+	if err != nil {
 		fmt.Println("Got error calling UpdateEndpoint:")
 		fmt.Println(err.Error())
 	} else {
@@ -279,37 +280,37 @@ func CreateEndpointAndSendConfirmation(w http.ResponseWriter, r *http.Request, u
 		getLongCodeResponse, err := ssm_client.GetParameter(&ssm.GetParameterInput{
 			Name: aws.String("retaildemostore-pinpoint-sms-longcode"),
 		})
-		if err!=nil {
+		if err != nil {
 			fmt.Println("Got error when getting the value of long code from SSM parameters:")
 			fmt.Println(err.Error())
 			http.Error(w, err.Error(), 409)
 		} else {
-			if(aws.StringValue(getLongCodeResponse.Parameter.Value) == "NONE"){
+			if aws.StringValue(getLongCodeResponse.Parameter.Value) == "NONE" {
 				var errMessage string = "The value of long code not set. Please set the value for long code parameter and try again."
 				http.Error(w, errMessage, 422)
 				return
 			}
 			// send confirmation to the user if long code is not NONE
-			var sendMessageAddress = make(map[string] *pinpoint.AddressConfiguration)
-			sendMessageAddress[phonenumber] = &pinpoint.AddressConfiguration {
+			var sendMessageAddress = make(map[string]*pinpoint.AddressConfiguration)
+			sendMessageAddress[phonenumber] = &pinpoint.AddressConfiguration{
 				ChannelType: aws.String("SMS"),
 			}
-			var sendMessageInput *pinpoint.SendMessagesInput 
-			sendMessageInput = &pinpoint.SendMessagesInput {
+			var sendMessageInput *pinpoint.SendMessagesInput
+			sendMessageInput = &pinpoint.SendMessagesInput{
 				ApplicationId: &pinpoint_app_id,
-				MessageRequest: &pinpoint.MessageRequest {
+				MessageRequest: &pinpoint.MessageRequest{
 					Addresses: sendMessageAddress,
-					MessageConfiguration: &pinpoint.DirectMessageConfiguration {
-						SMSMessage: &pinpoint.SMSMessage {
-							Body: aws.String("Reply Y to receive one time automated marketing messages at this number. No purchase necessary. T&C apply."),
-							MessageType: aws.String("TRANSACTIONAL"),
+					MessageConfiguration: &pinpoint.DirectMessageConfiguration{
+						SMSMessage: &pinpoint.SMSMessage{
+							Body:              aws.String("Reply Y to receive one time automated marketing messages at this number. No purchase necessary. T&C apply."),
+							MessageType:       aws.String("TRANSACTIONAL"),
 							OriginationNumber: getLongCodeResponse.Parameter.Value,
 						},
 					},
 				},
 			}
 			sendMessageOutput, err := pinpoint_client.SendMessages(sendMessageInput)
-			if err!=nil {
+			if err != nil {
 				fmt.Println("Got error calling SendMessages:")
 				fmt.Println(err.Error())
 			} else {
@@ -319,16 +320,17 @@ func CreateEndpointAndSendConfirmation(w http.ResponseWriter, r *http.Request, u
 		}
 	}
 }
-//UserVerifyAndUpdatePhone func
-func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request){
+
+// UserVerifyAndUpdatePhone func
+func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
 	if (*r).Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 	type UserIDandNumber struct {
-		UserID		string 	   `json:"user_id" yaml:"user_id"`
-		PhoneNumber string 	   `json:"phone_number" yaml:"phone_number"`
+		UserID      string `json:"user_id" yaml:"user_id"`
+		PhoneNumber string `json:"phone_number" yaml:"phone_number"`
 	}
 	var userDetails UserIDandNumber
 
@@ -355,7 +357,7 @@ func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request){
 		// check if the number entered by user is valid
 		numberValidaterequest := &pinpoint.NumberValidateRequest{
 			IsoCountryCode: aws.String("US"),
-			PhoneNumber: aws.String(userDetails.PhoneNumber),
+			PhoneNumber:    aws.String(userDetails.PhoneNumber),
 		}
 		phoneValidateInput := &pinpoint.PhoneNumberValidateInput{
 			NumberValidateRequest: numberValidaterequest,
@@ -369,8 +371,8 @@ func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request){
 		} else {
 			fmt.Println(res)
 			mobilePhoneType := aws.StringValue(res.NumberValidateResponse.PhoneType)
-			if (mobilePhoneType == "INVALID" || mobilePhoneType == "LANDLINE") {
-				var errMessage string = "The phone number provided is phone number of type "  + mobilePhoneType + ". The number would not not be capable of receiving SMS. Cannot create SMS endpoint for this number. Try entering a valid phone number."
+			if mobilePhoneType == "INVALID" || mobilePhoneType == "LANDLINE" {
+				var errMessage string = "The phone number provided is phone number of type " + mobilePhoneType + ". The number would not not be capable of receiving SMS. Cannot create SMS endpoint for this number. Try entering a valid phone number."
 				panic(errMessage)
 				http.Error(w, errMessage, 422)
 				return
@@ -384,32 +386,32 @@ func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request){
 				userAttributes["Age"] = []*string{&userAge}
 
 				endpointRequest := &pinpoint.EndpointRequest{
-					Address: &userDetails.PhoneNumber,
+					Address:     &userDetails.PhoneNumber,
 					ChannelType: aws.String("SMS"),
-					OptOut: aws.String("ALL"),
-					Location: &pinpoint.EndpointLocation {
+					OptOut:      aws.String("ALL"),
+					Location: &pinpoint.EndpointLocation{
 						PostalCode: res.NumberValidateResponse.ZipCode,
-						City: res.NumberValidateResponse.City,
-						Country: res.NumberValidateResponse.CountryCodeIso2,
+						City:       res.NumberValidateResponse.City,
+						Country:    res.NumberValidateResponse.CountryCodeIso2,
 					},
-					Demographic: &pinpoint.EndpointDemographic {
+					Demographic: &pinpoint.EndpointDemographic{
 						Timezone: res.NumberValidateResponse.Timezone,
 					},
 					User: &pinpoint.EndpointUser{
 						UserAttributes: userAttributes,
-						UserId: &userDetails.UserID,
+						UserId:         &userDetails.UserID,
 					},
 				}
 				var endpointId string = userDetails.PhoneNumber[1:]
 				updateEndpointInput := &pinpoint.UpdateEndpointInput{
-					ApplicationId: &pinpoint_app_id,
-					EndpointId: &endpointId,
+					ApplicationId:   &pinpoint_app_id,
+					EndpointId:      &endpointId,
 					EndpointRequest: endpointRequest,
 				}
 				CreateEndpointAndSendConfirmation(w, r, updateEndpointInput, userDetails.PhoneNumber)
-				}
 			}
 		}
+	}
 	t := RepoUpdateUser(user)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
@@ -423,5 +425,5 @@ func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request){
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
 }

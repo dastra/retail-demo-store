@@ -4,6 +4,8 @@
 package main
 
 import (
+	"github.com/aws/aws-xray-sdk-go/awsplugins/ecs"
+	"github.com/aws/aws-xray-sdk-go/xray"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 )
 
-//var sess *session.Session
+// var sess *session.Session
 var sess, err = session.NewSession(&aws.Config{})
 
 var pinpoint_app_id = os.Getenv("PINPOINT_APP_ID")
@@ -21,5 +23,7 @@ var ssm_client = ssm.New(sess)
 
 // Connect Stuff
 func init() {
-	
+	// X-Ray
+	ecs.Init()
+	_ = xray.Configure(xray.Config{})
 }

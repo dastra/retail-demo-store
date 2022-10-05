@@ -3,7 +3,8 @@ module products
 go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.40.38
+	github.com/aws/aws-sdk-go v1.44.97
+	github.com/aws/aws-xray-sdk-go v1.7.1
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0

@@ -4,9 +4,9 @@
 package main
 
 import (
-	"net/http"
-
+	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 // NewRouter Router
@@ -15,6 +15,7 @@ func NewRouter() *mux.Router {
 	for _, route := range routes {
 		var handler http.Handler
 		handler = route.HandlerFunc
+		handler = xray.Handler(xray.NewFixedSegmentNamer("Products Service"), handler)
 		handler = Logger(handler, route.Name)
 
 		router.

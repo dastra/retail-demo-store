@@ -11,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-xray-sdk-go/awsplugins/ecs"
+	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 var sess, err = session.NewSession(&aws.Config{})
@@ -41,4 +43,8 @@ func init() {
 		runningLocal = false
 		dynamoClient = dynamodb.New(sess)
 	}
+
+	// X-Ray
+	ecs.Init()
+	_ = xray.Configure(xray.Config{})
 }
