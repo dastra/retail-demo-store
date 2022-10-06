@@ -141,6 +141,7 @@ Resources:
       Parameters:
         ServiceName: products
         ServicePath: src/products
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -177,6 +178,7 @@ Resources:
       Parameters:
         ServiceName: users
         ServicePath: src/users
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -211,6 +213,7 @@ Resources:
       Parameters:
         ServiceName: carts
         ServicePath: src/carts
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -244,6 +247,7 @@ Resources:
       Parameters:
         ServiceName: orders
         ServicePath: src/orders
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -277,6 +281,7 @@ Resources:
       Parameters:
         ServiceName: search
         ServicePath: src/search
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -311,6 +316,7 @@ Resources:
       Parameters:
         ServiceName: location
         ServicePath: src/location
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -345,6 +351,7 @@ Resources:
       Parameters:
         ServiceName: offers
         ServicePath: src/offers
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -379,6 +386,7 @@ Resources:
       Parameters:
         ServiceName: recommendations
         ServicePath: src/recommendations
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType
@@ -415,6 +423,7 @@ Resources:
       Parameters:
         ServiceName: videos
         ServicePath: src/videos
+        ParentStackName: !Ref ParentStackName
         ResourceBucket: !Ref ResourceBucket
         ResourceBucketRelativePath: !Ref ResourceBucketRelativePath
         SourceDeploymentType: !Ref SourceDeploymentType

@@ -17,6 +17,10 @@ Parameters:
   ACMCertARN:
     Type: String
 
+  ParentStackName:
+    Type: String
+    Description: The Parent Stack Name - i.e. retaildemostore
+
 Resources:
   SecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
@@ -36,6 +40,7 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
+      Name: !Sub "${ParentStackName}-${ServiceName}"
       Subnets: !Ref Subnets
       SecurityGroups:
         - !Ref SecurityGroup
@@ -43,6 +48,8 @@ Resources:
         -
           Key: RetailDemoStoreServiceName
           Value: !Ref ServiceName
+        - Key: Name
+          Value: !Sub "${ParentStackName}-${ServiceName}"
 
   LoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener

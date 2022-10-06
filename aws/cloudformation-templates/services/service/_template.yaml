@@ -12,6 +12,10 @@ Parameters:
   ServicePath:
     Type: String
 
+  ParentStackName:
+    Type: String
+    Description: The Parent Stack Name - i.e. retaildemostore
+
   ResourceBucket:
     Type: String
     Description: S3Bucket Bucket where the Resources are stored (cloudformation, images, lambda code)
@@ -229,6 +233,7 @@ Resources:
         Subnets: !Ref Subnets
         VpcId: !Ref VpcId
         ACMCertARN: !Ref ACMCertARN
+        ParentStackName: !Ref ParentStackName
 
   Pipeline:
     Type: AWS::CloudFormation::Stack
