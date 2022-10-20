@@ -1101,6 +1101,7 @@ export const AnalyticsHandler = {
                     identityPoolId: process.env.VUE_APP_AWS_IDENTITY_POOL_ID,
                     pageIdFormat: 'PATH_AND_HASH',
                     sessionSampleRate: 1,
+                    sessionEventLimit: 0,
                     telemetries: [
                         'errors',
                         [ 'http', {
