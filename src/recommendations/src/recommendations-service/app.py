@@ -6,8 +6,6 @@ from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 from aws_xray_sdk.core import patch_all
 
-patch_all()
-
 from typing import Dict, List, Tuple, Union
 from flask import Flask, jsonify, Response
 from flask import request
@@ -27,6 +25,9 @@ import requests
 import random
 import logging
 from datetime import datetime
+
+xray_recorder.configure(service='Recommendations Service', plugins=('ECSPlugin',))
+patch_all()
 
 NUM_DISCOUNTS = 2
 
@@ -319,7 +320,6 @@ logger = app.logger
 corps = CORS(app, expose_headers=['X-Experiment-Name', 'X-Experiment-Type', 'X-Experiment-Id', 'X-Personalize-Recipe',
                                   'X-Amzn-Trace-Id'])
 
-xray_recorder.configure(service='Recommendations Service')
 XRayMiddleware(app, xray_recorder)
 
 @app.errorhandler(BadRequest)

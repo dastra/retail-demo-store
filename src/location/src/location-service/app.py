@@ -15,6 +15,7 @@ from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 from aws_xray_sdk.core import patch_all
 
+xray_recorder.configure(service='Location Service', plugins=('ECSPlugin',))
 patch_all()
 
 RESOURCE_BUCKET = os.environ.get('RESOURCE_BUCKET')
@@ -71,7 +72,6 @@ class LoggingMiddleware(object):
 app = Flask(__name__)
 corps = CORS(app, expose_headers=['X-Amzn-Trace-Id'])
 
-xray_recorder.configure(service='Location Service', plugins=('ECSPlugin',))
 XRayMiddleware(app, xray_recorder)
 
 @app.route('/')

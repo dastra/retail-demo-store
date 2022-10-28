@@ -5,8 +5,6 @@ from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 from aws_xray_sdk.core import patch_all
 
-patch_all()
-
 from flask import Flask, jsonify
 from flask import request
 from flask_cors import CORS
@@ -15,6 +13,9 @@ from opensearchpy import OpenSearch, NotFoundError
 import json
 import os
 import pprint
+
+xray_recorder.configure(service='Search Service', plugins=('ECSPlugin',))
+patch_all()
 
 INDEX_DOES_NOT_EXIST = 'index_not_found_exception'
 
@@ -49,7 +50,6 @@ class LoggingMiddleware(object):
 app = Flask(__name__)
 corps = CORS(app, expose_headers=['X-Amzn-Trace-Id'])
 
-xray_recorder.configure(service='Search Service')
 XRayMiddleware(app, xray_recorder)
 
 # -- Exceptions

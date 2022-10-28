@@ -6,8 +6,6 @@ from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.ext.flask.middleware import XRayMiddleware
 from aws_xray_sdk.core import patch_all
 
-patch_all()
-
 xray_recorder.begin_segment("Videos-init")
 
 import logging
@@ -23,6 +21,9 @@ import boto3
 import srt
 from flask import Flask, jsonify, Response
 from flask_cors import CORS
+
+patch_all()
+xray_recorder.configure(service='Videos Service', plugins=('ECSPlugin',))
 
 
 # -- Environment variables - defined by CloudFormation when deployed
@@ -307,7 +308,6 @@ app = Flask(__name__,
             static_url_path=STATIC_URL_PATH)
 corps = CORS(app, expose_headers=['X-Amzn-Trace-Id'])
 
-xray_recorder.configure(service='Videos Service')
 XRayMiddleware(app, xray_recorder)
 
 @app.errorhandler(BadRequest)
