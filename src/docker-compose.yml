@@ -9,6 +9,8 @@ services:
       - xray
     build:
       context: ./carts
+      args:
+        - GOPROXY_OVERRIDE
     networks:
       - dev-net
     environment:
@@ -38,6 +40,8 @@ services:
       - AWS_XRAY_DAEMON_ADDRESS=xray:2000
     build:
       context: ./orders
+      args:
+        - GOPROXY_OVERRIDE
     networks:
       - dev-net
     ports:
@@ -151,6 +155,8 @@ services:
       - AWS_XRAY_DAEMON_ADDRESS=xray:2000
     build:
       context: ./users
+      args:
+        - GOPROXY_OVERRIDE
     networks:
       - dev-net
     ports:
