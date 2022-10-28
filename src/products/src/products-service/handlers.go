@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"strconv"
@@ -22,12 +23,20 @@ import (
 var imageRootURL = os.Getenv("IMAGE_ROOT_URL")
 var missingImageFile = "product_image_coming_soon.png"
 
-// initResponse
-func initResponse(w *http.ResponseWriter) {
+// setJsonContentTypeResponse
+func setJsonContentTypeResponse(w *http.ResponseWriter) {
 	(*w).Header().Set("Content-Type", "application/json; charset=UTF-8")
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, DELETE, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
+}
+
+// Sets the CORS headers
+func setCorsHeaders(router *mux.Router) http.Handler {
+	originsOK := handlers.AllowedOrigins([]string{"*"})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+	// Accept, Accept-Language, and Content-Language are always allowed.
+	headersOK := handlers.AllowedHeaders([]string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token",
+		"Authorization", "X-Amzn-Trace-Id"})
+
+	return handlers.CORS(originsOK, headersOK, methodsOK)(router)
 }
 
 func fullyQualifyImageURLs(r *http.Request) bool {
@@ -89,7 +98,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // ProductIndex Handler
 func ProductIndex(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	ret := RepoFindALLProducts()
 
@@ -102,7 +111,7 @@ func ProductIndex(w http.ResponseWriter, r *http.Request) {
 
 // CategoryIndex Handler
 func CategoryIndex(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	ret := RepoFindALLCategories()
 
@@ -116,7 +125,7 @@ func CategoryIndex(w http.ResponseWriter, r *http.Request) {
 
 // ProductShow Handler
 func ProductShow(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	vars := mux.Vars(r)
 
@@ -153,7 +162,7 @@ func ProductShow(w http.ResponseWriter, r *http.Request) {
 
 // CategoryShow Handler
 func CategoryShow(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	vars := mux.Vars(r)
 
@@ -173,7 +182,7 @@ func CategoryShow(w http.ResponseWriter, r *http.Request) {
 
 // ProductInCategory Handler
 func ProductInCategory(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	vars := mux.Vars(r)
 	categoryName := vars["categoryName"]
@@ -189,7 +198,7 @@ func ProductInCategory(w http.ResponseWriter, r *http.Request) {
 
 // ProductFeatured Handler
 func ProductFeatured(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	ret := RepoFindFeatured()
 
@@ -225,7 +234,7 @@ func validateProduct(product *Product) error {
 
 // UpdateProduct - updates a product
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	vars := mux.Vars(r)
 
@@ -272,7 +281,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 // UpdateInventory - updates stock quantity for one item
 func UpdateInventory(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	vars := mux.Vars(r)
 
@@ -317,7 +326,7 @@ func UpdateInventory(w http.ResponseWriter, r *http.Request) {
 
 // NewProduct  - creates a new Product
 func NewProduct(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	var product Product
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
@@ -355,7 +364,7 @@ func NewProduct(w http.ResponseWriter, r *http.Request) {
 
 // DeleteProduct - deletes a single product
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	initResponse(&w)
+	setJsonContentTypeResponse(&w)
 
 	vars := mux.Vars(r)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -22,9 +23,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // CartIndex Handler
 func CartIndex(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusOK)
 
 	var values []Cart
@@ -39,7 +38,6 @@ func CartIndex(w http.ResponseWriter, r *http.Request) {
 
 // CartShowByID Handler
 func CartShowByID(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
 
 	vars := mux.Vars(r)
 	cartID := vars["cartID"]
@@ -51,11 +49,6 @@ func CartShowByID(w http.ResponseWriter, r *http.Request) {
 
 // CartUpdate Func
 func CartUpdate(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 
 	var cart Cart
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
@@ -66,7 +59,7 @@ func CartUpdate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &cart); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -78,7 +71,7 @@ func CartUpdate(w http.ResponseWriter, r *http.Request) {
 
 	t := RepoUpdateCart(cartID, cart)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
@@ -87,12 +80,6 @@ func CartUpdate(w http.ResponseWriter, r *http.Request) {
 
 // CartCreate Func
 func CartCreate(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	var cart Cart
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
@@ -102,7 +89,7 @@ func CartCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &cart); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -111,7 +98,7 @@ func CartCreate(w http.ResponseWriter, r *http.Request) {
 
 	t := RepoCreateCart(cart)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
@@ -120,12 +107,6 @@ func CartCreate(w http.ResponseWriter, r *http.Request) {
 
 // Sign a payload for Amazon Pay - delegates to a Lambda function for doing this.
 func SignAmazonPayPayload(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	awsSession := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -151,16 +132,24 @@ func SignAmazonPayPayload(w http.ResponseWriter, r *http.Request) {
 	var responsePayload map[string]interface{}
 	json.Unmarshal(result.Payload, &responsePayload)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(responsePayload); err != nil {
 		panic(err)
 	}
 }
 
-// enableCors
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
+func setJsonContentTypeResponse(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Type", "application/json; charset=UTF-8")
+}
+
+// Sets the CORS headers
+func setCorsHeaders(router *mux.Router) http.Handler {
+	originsOK := handlers.AllowedOrigins([]string{"*"})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "PUT"})
+	// Accept, Accept-Language, and Content-Language are always allowed.
+	headersOK := handlers.AllowedHeaders([]string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token",
+		"Authorization", "X-Amzn-Trace-Id"})
+
+	return handlers.CORS(originsOK, headersOK, methodsOK)(router)
 }

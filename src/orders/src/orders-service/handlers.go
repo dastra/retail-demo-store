@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -20,10 +21,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // OrderIndex Handler
 func OrderIndex(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(orders); err != nil {
@@ -33,9 +31,6 @@ func OrderIndex(w http.ResponseWriter, r *http.Request) {
 
 // OrderIndexByUsername Handler
 func OrderIndexByUsername(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
 	vars := mux.Vars(r)
 	username := vars["username"]
 
@@ -46,9 +41,6 @@ func OrderIndexByUsername(w http.ResponseWriter, r *http.Request) {
 
 // OrderShowByID Handler
 func OrderShowByID(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
 	vars := mux.Vars(r)
 	orderID := vars["orderID"]
 
@@ -59,12 +51,6 @@ func OrderShowByID(w http.ResponseWriter, r *http.Request) {
 
 // OrderUpdate Func
 func OrderUpdate(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	var order Order
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
@@ -74,7 +60,7 @@ func OrderUpdate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &order); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -82,7 +68,7 @@ func OrderUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := RepoUpdateOrder(order)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
@@ -91,12 +77,6 @@ func OrderUpdate(w http.ResponseWriter, r *http.Request) {
 
 // OrderCreate Func
 func OrderCreate(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	var order Order
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
@@ -106,7 +86,7 @@ func OrderCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &order); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -114,16 +94,24 @@ func OrderCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := RepoCreateOrder(order)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
 	}
 }
 
-// enableCors
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
+func setJsonContentTypeResponse(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Type", "application/json; charset=UTF-8")
+}
+
+// Sets the CORS headers
+func setCorsHeaders(router *mux.Router) http.Handler {
+	originsOK := handlers.AllowedOrigins([]string{"*"})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "PUT"})
+	// Accept, Accept-Language, and Content-Language are always allowed.
+	headersOK := handlers.AllowedHeaders([]string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token",
+		"Authorization", "X-Amzn-Trace-Id"})
+
+	return handlers.CORS(originsOK, headersOK, methodsOK)(router)
 }

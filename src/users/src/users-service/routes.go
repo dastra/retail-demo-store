@@ -63,13 +63,7 @@ var routes = Routes{
 	},
 	Route{
 		"ClaimUser",
-		"put",
-		"/users/id/{userID}/claim",
-		ClaimUser,
-	},
-	Route{
-		"ClaimUser",
-		"OPTIONS",
+		"PUT",
 		"/users/id/{userID}/claim",
 		ClaimUser,
 	},
@@ -80,32 +74,14 @@ var routes = Routes{
 		UserCreate,
 	},
 	Route{
-		"UserCreate",
-		"OPTIONS",
-		"/users",
-		UserCreate,
-	},
-	Route{
 		"UserUpdate",
 		"PUT",
 		"/users/id/{userID}",
 		UserUpdate,
 	},
 	Route{
-		"UserUpdate",
-		"OPTIONS",
-		"/users/id/{userID}",
-		UserUpdate,
-	},
-	Route{
 		"UserVerifyAndUpdatePhone",
 		"PUT",
-		"/users/id/{userID}/verifyphone",
-		UserVerifyAndUpdatePhone,
-	},
-	Route{
-		"UserVerifyAndUpdatePhone",
-		"OPTIONS",
 		"/users/id/{userID}/verifyphone",
 		UserVerifyAndUpdatePhone,
 	},

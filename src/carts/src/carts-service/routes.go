@@ -42,32 +42,14 @@ var routes = Routes{
 		CartCreate,
 	},
 	Route{
-		"CartCreate",
-		"OPTIONS",
-		"/carts",
-		CartCreate,
-	},
-	Route{
 		"CartUpdate",
 		"PUT",
 		"/carts/{cartID}",
 		CartUpdate,
 	},
 	Route{
-		"CartUpdate",
-		"OPTIONS",
-		"/carts/{cartID}",
-		CartUpdate,
-	},
-	Route{
 		"SignPayload",
 		"POST",
-		"/sign",
-		SignAmazonPayPayload,
-	},
-	Route{
-		"SignPayload",
-		"OPTIONS",
 		"/sign",
 		SignAmazonPayPayload,
 	},

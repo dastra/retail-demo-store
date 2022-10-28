@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -26,9 +27,6 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // UserIndex Handler
 func UserIndex(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
 	var offset = 0
 	var count = 20
 
@@ -67,7 +65,7 @@ func UserIndex(w http.ResponseWriter, r *http.Request) {
 		count = i
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 
 	var end = offset + count
 	if end > len(users) {
@@ -92,9 +90,6 @@ func UserIndex(w http.ResponseWriter, r *http.Request) {
 
 // UserShowByID Handler
 func UserShowByID(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
 	vars := mux.Vars(r)
 	userID := vars["userID"]
 
@@ -105,9 +100,6 @@ func UserShowByID(w http.ResponseWriter, r *http.Request) {
 
 // UserShowByUsername Handler
 func UserShowByUsername(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
 	vars := mux.Vars(r)
 	username := vars["username"]
 
@@ -118,8 +110,6 @@ func UserShowByUsername(w http.ResponseWriter, r *http.Request) {
 
 // UserShowByIdentityId handler
 func UserShowByIdentityId(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-
 	vars := mux.Vars(r)
 	identityID := vars["identityID"]
 
@@ -130,12 +120,6 @@ func UserShowByIdentityId(w http.ResponseWriter, r *http.Request) {
 
 // ClaimUser handler
 func ClaimUser(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 	var userId int
 	vars := mux.Vars(r)
 	userIdVar := vars["userID"]
@@ -150,8 +134,6 @@ func ClaimUser(w http.ResponseWriter, r *http.Request) {
 
 // GetRandomUser handler
 func GetRandomUser(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-
 	var keys = r.URL.Query()
 	var count = 1
 	var countParam = keys.Get("count")
@@ -173,9 +155,6 @@ func GetRandomUser(w http.ResponseWriter, r *http.Request) {
 
 // GetFilteredUser handler
 func GetUnclaimedUsers(w http.ResponseWriter, r *http.Request) {
-
-	enableCors(&w)
-
 	var keys = r.URL.Query()
 
 	primaryPersona := keys.Get("primaryPersona")
@@ -201,12 +180,6 @@ func GetUnclaimedUsers(w http.ResponseWriter, r *http.Request) {
 
 // UserUpdate Func
 func UserUpdate(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	var user User
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
@@ -216,7 +189,7 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &user); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -224,7 +197,7 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := RepoUpdateUser(user)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
@@ -233,12 +206,6 @@ func UserUpdate(w http.ResponseWriter, r *http.Request) {
 
 // UserCreate Func
 func UserCreate(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
 	var user User
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 	if err != nil {
@@ -248,7 +215,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &user); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -260,7 +227,7 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
@@ -269,7 +236,6 @@ func UserCreate(w http.ResponseWriter, r *http.Request) {
 
 // CreateEndpoint for the user and send confirmation message to opt in for text alerts
 func CreateEndpointAndSendConfirmation(w http.ResponseWriter, r *http.Request, updateEndpointInput *pinpoint.UpdateEndpointInput, phonenumber string) {
-	enableCors(&w)
 	updateEndpointOutput, err := pinpoint_client.UpdateEndpoint(updateEndpointInput)
 	if err != nil {
 		fmt.Println("Got error calling UpdateEndpoint:")
@@ -323,11 +289,6 @@ func CreateEndpointAndSendConfirmation(w http.ResponseWriter, r *http.Request, u
 
 // UserVerifyAndUpdatePhone func
 func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
-	if (*r).Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 	type UserIDandNumber struct {
 		UserID      string `json:"user_id" yaml:"user_id"`
 		PhoneNumber string `json:"phone_number" yaml:"phone_number"`
@@ -342,7 +303,7 @@ func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &userDetails); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		setJsonContentTypeResponse(&w)
 		w.WriteHeader(422) // unprocessable entity
 		if err := json.NewEncoder(w).Encode(err); err != nil {
 			panic(err)
@@ -414,16 +375,24 @@ func UserVerifyAndUpdatePhone(w http.ResponseWriter, r *http.Request) {
 	}
 	t := RepoUpdateUser(user)
 
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	setJsonContentTypeResponse(&w)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(t); err != nil {
 		panic(err)
 	}
 }
 
-// enableCors
-func enableCors(w *http.ResponseWriter) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Amzn-Trace-Id")
+func setJsonContentTypeResponse(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Type", "application/json; charset=UTF-8")
+}
+
+// Sets the CORS headers
+func setCorsHeaders(router *mux.Router) http.Handler {
+	originsOK := handlers.AllowedOrigins([]string{"*"})
+	methodsOK := handlers.AllowedMethods([]string{"GET", "POST", "PUT"})
+	// Accept, Accept-Language, and Content-Language are always allowed.
+	headersOK := handlers.AllowedHeaders([]string{"Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token",
+		"Authorization", "X-Amzn-Trace-Id"})
+
+	return handlers.CORS(originsOK, headersOK, methodsOK)(router)
 }
