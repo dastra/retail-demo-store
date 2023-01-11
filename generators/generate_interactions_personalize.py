@@ -27,6 +27,7 @@ import random
 import yaml
 import logging
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 # Keep things deterministic
 RANDOM_SEED = 0
@@ -34,9 +35,11 @@ RANDOM_SEED = 0
 # Where to put the generated data so that it is picked up by stage.sh
 GENERATED_DATA_ROOT = "src/aws-lambda/personalize-pre-create-resources/data"
 
-# Interactions will be generated between these dates
-FIRST_TIMESTAMP = 1591803782  # 2020-06-10, 18:43:02
-LAST_TIMESTAMP = 1599579782  # 2020-09-08, 18:43:02
+# Interactions will be generated across the last 90 days
+DAYS_BACK = 90
+now = datetime.now()
+LAST_TIMESTAMP = int(datetime.timestamp(now))
+FIRST_TIMESTAMP = int(datetime.timestamp(now - timedelta(days = DAYS_BACK)))
 
 # Users are set up with 3 product categories on their personas. If [0.6, 0.25, 0.15] it means
 # 60% of the time they'll choose a product from the first category, etc.
@@ -63,6 +66,7 @@ IN_USERS_FILENAMES = ["src/users/src/users-service/data/users.json.gz",
 PROGRESS_MONITOR_SECONDS_UPDATE = 30
 
 GENDER_ANY = 'Any'
+NOT_PROMOTED = 'N'
 
 # This is where stage.sh will pick them up from
 out_items_filename = f"{GENERATED_DATA_ROOT}/items.csv"
@@ -100,15 +104,18 @@ def generate_user_items(out_users_filename, out_items_filename, in_users_filenam
 
     users_df = pd.DataFrame(users)
 
-    products_dataset_df = products_df[['id','price','category','style','description','gender_affinity']]
+    products_dataset_df = products_df[['id','price','category','style','description','gender_affinity','promoted']]
     products_dataset_df = products_dataset_df.rename(columns = {'id':'ITEM_ID',
                                                             'price':'PRICE',
                                                             'category':'CATEGORY_L1',
                                                             'style':'CATEGORY_L2',
                                                             'description':'PRODUCT_DESCRIPTION',
-                                                            'gender_affinity':'GENDER'})
+                                                            'gender_affinity':'GENDER',
+                                                            'promoted': 'PROMOTED'})
     # Since GENDER column requires a value for all rows, default all nulls to "Any"
     products_dataset_df['GENDER'].fillna(GENDER_ANY, inplace = True)
+    products_dataset_df.loc[products_dataset_df['PROMOTED'] == True, 'PROMOTED'] = 'Y'
+    products_dataset_df['PROMOTED'].fillna(NOT_PROMOTED, inplace = True)
     products_dataset_df.to_csv(out_items_filename, index=False)
 
     users_dataset_df = users_df[['id', 'age', 'gender']]
